@@ -85,13 +85,18 @@ const meta = moduleMeta('defect')
 const columns = ["缺陷编号", "设备名称", "缺陷描述", "缺陷等级", "发现日期", "处理期限", "处理人员", "缺陷状态"]
 const actions = ["派发处理", "确认消除", "登记挂账"]
 const statuses = ["待处理", "处理中", "已消除", "已挂账"]
-const stats = [{"label": "待处理缺陷", "value": 0}, {"label": "处理中缺陷", "value": 0}, {"label": "已消除缺陷", "value": 0}]
 
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
 const filterFields = columns.slice(0, 3)
+// 统计与主变告警联动：告警开单/销单落进来的记录，这里实时数得出
+const stats = computed(() => [
+  { label: '待处理缺陷', value: rows.value.filter((row) => row.status === '待处理').length },
+  { label: '处理中缺陷', value: rows.value.filter((row) => row.status === '处理中').length },
+  { label: '已消除缺陷', value: rows.value.filter((row) => row.status === '已消除').length },
+])
 const statusSummary = computed(() =>
   statuses.map((status: string) => ({
     status,
