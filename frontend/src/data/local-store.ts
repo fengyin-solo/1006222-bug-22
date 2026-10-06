@@ -57,3 +57,16 @@ export function resetRows(key: string): EntryRow[] {
 export function storageKey(): string {
   return STORAGE_KEY
 }
+
+/** 直接读合并后的全量台账（含示例兜底），供一次性数据迁移使用。 */
+export function readRawRecord(): Record<string, EntryRow[]> {
+  return clone(allRows())
+}
+
+/** 整份写回台账并刷新缓存：迁移、批量导入都走这里，保证之后读到的就是同一份。 */
+export function writeRawRecord(record: Record<string, EntryRow[]>): void {
+  cache = record
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
+  }
+}

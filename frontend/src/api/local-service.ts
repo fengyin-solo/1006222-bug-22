@@ -1,5 +1,6 @@
 import { MODULE_BY_KEY } from '@/data/modules'
 import { allRows, listRows, resetRows, saveRows } from '@/data/local-store'
+import { listAlarms } from '@/domain/transformer/history'
 import type { ActionResult, EntryRow, ModuleMeta, OverviewResult, PageResult } from '@/data/types'
 
 // 会写进数据的「往回走」动作：命中就把这条记录标成异常态，看板上能一眼看出来。
@@ -86,13 +87,20 @@ export function downloadEntries(key: string): void {
 
 export function loadOverview(): OverviewResult {
   const rows = allRows()
+  const activeAlarmCount = listAlarms().filter((item) => item.state === '活动').length
   const modules = [...MODULE_BY_KEY.values()].map((meta) => {
     const entries = rows[meta.key] ?? []
+    // 主变压器的异常量与列表页「告警变压器」同口径：只数活动告警台数，
+    // 复位/停运回来后残留的 abnormal 标记不再制造两边对不上的数。
+    const abnormal =
+      meta.key === 'transformer'
+        ? activeAlarmCount
+        : entries.filter((row) => row.abnormal).length
     return {
       name: meta.name,
       created: entries.length,
       pending: entries.filter((row) => row.pending).length,
-      abnormal: entries.filter((row) => row.abnormal).length,
+      abnormal,
     }
   })
   const cards = [
